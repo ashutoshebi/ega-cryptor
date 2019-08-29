@@ -45,11 +45,11 @@ public class CommandLineOptionParser {
     private CommandLineOptionParser(final OptionSet optionSet) throws FileNotFoundException {
         outputFolderPath = Paths.get(optionSet.valueOf(OUTPUT_FOLDER_PATH).toString());
 
-        if (!outputFolderPath.toString().isEmpty() && !outputFolderPath.toFile().exists()) {
-            throw new FileNotFoundException("Output directory path doesn't exists");
+        if (!outputFolderPath.toString().isEmpty() && !outputFolderPath.normalize().toFile().mkdirs()) {
+            throw new FileNotFoundException("Output directory path doesn't exists. Unable to create directory.");
         }
         fileToEncryptPaths = Arrays.asList(optionSet.valueOf(FILE_TO_ENCRYPT_PATH).toString().split(",")).
-                parallelStream().map(filePath -> Paths.get(filePath.trim())).collect(Collectors.toList());
+                parallelStream().map(filePath -> Paths.get(filePath.trim()).normalize()).collect(Collectors.toList());
     }
 
     static Optional<CommandLineOptionParser> parse(final String... parameters) throws IOException {

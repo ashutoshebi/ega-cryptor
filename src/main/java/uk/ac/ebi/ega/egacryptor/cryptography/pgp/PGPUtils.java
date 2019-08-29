@@ -82,7 +82,7 @@ public class PGPUtils {
         if (!isForEncryption(publicKey)) {
             throw new IllegalArgumentException("KeyID ".concat(publicKey.getKeyID() + " not flagged for encryption."));
         }
-        LOGGER.trace("Public key found for encryption with KeyID {}", publicKey.getKeyID());
+        LOGGER.debug("Public key found for encryption with KeyID {}", publicKey.getKeyID());
         return publicKey;
     }
 
