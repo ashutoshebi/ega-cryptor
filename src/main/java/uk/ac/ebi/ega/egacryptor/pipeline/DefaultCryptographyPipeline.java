@@ -88,6 +88,7 @@ public class DefaultCryptographyPipeline implements CryptographyPipeline {
 
         long bytesRead;
         try (final PipelineStream pipelineStream = new DefaultStream(encryptInputStream, encryptedOutputStream, bufferSize)) {
+            LOGGER.info("File {} is being processed", inputFile.getPath());
             bytesRead = pipelineStream.execute();
         }
         writeToFile(outputFileMD5, encryptInputStream.getMD5());
