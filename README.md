@@ -1,7 +1,7 @@
 # ega-cryptor
 Enables submitters to produce EGA compliant files. Multiple files will be processed in parallel.
 
-#How to run
+# How to run
 Make sure Java 1.8 or above version is installed on your system. type **java -version** and press enter to
 check what java version is installed. Download the **ega-cryptor-1.0.0.jar** and navigate to folder in which jar has been downloaded.
 
