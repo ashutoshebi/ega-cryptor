@@ -19,9 +19,9 @@ package uk.ac.ebi.ega.egacryptor.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.ebi.ega.egacryptor.model.FileToProcess;
 import uk.ac.ebi.ega.egacryptor.pipeline.CryptographyPipeline;
 
-import java.nio.file.Path;
 import java.util.List;
 
 public class TaskExecutorService implements ITaskExecutorService {
@@ -33,10 +33,9 @@ public class TaskExecutorService implements ITaskExecutorService {
     }
 
     @Override
-    public void execute(final List<Path> paths, final Path encryptedOutputFilePath) {
+    public void execute(final List<FileToProcess> fileToProcessList) {
         LOGGER.trace("Executing TaskExecutorService::execute(List<Path>, Path)");
-        LOGGER.info("Paths size={}, Output folder path for Encrypted File(s)={}", paths.size(), encryptedOutputFilePath.toString());
-        paths.parallelStream().forEach(path -> cryptographyPipeline.process(path, encryptedOutputFilePath));
+        LOGGER.debug("Path list size={}", fileToProcessList.size());
+        fileToProcessList.parallelStream().forEach(cryptographyPipeline::process);
     }
 }
-

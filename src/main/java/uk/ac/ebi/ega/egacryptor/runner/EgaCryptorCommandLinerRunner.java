@@ -20,13 +20,16 @@ package uk.ac.ebi.ega.egacryptor.runner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import uk.ac.ebi.ega.egacryptor.cryptography.pgp.PGPCryptography;
+import uk.ac.ebi.ega.egacryptor.model.FileToProcess;
 import uk.ac.ebi.ega.egacryptor.service.IFileDiscoveryService;
 import uk.ac.ebi.ega.egacryptor.service.ITaskExecutorService;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 public class EgaCryptorCommandLinerRunner implements CommandLineRunner {
 
@@ -34,19 +37,53 @@ public class EgaCryptorCommandLinerRunner implements CommandLineRunner {
 
     private final ITaskExecutorService taskExecutorService;
     private final IFileDiscoveryService fileDiscoveryService;
+    private final ApplicationContext applicationContext;
 
     public EgaCryptorCommandLinerRunner(final ITaskExecutorService taskExecutorService,
-                                        final IFileDiscoveryService fileDiscoveryService) {
+                                        final IFileDiscoveryService fileDiscoveryService,
+                                        final ApplicationContext applicationContext) {
         this.taskExecutorService = taskExecutorService;
         this.fileDiscoveryService = fileDiscoveryService;
+        this.applicationContext = applicationContext;
     }
 
     @Override
-    public void run(final String... args) {
-        //TODO add options parser to verify arguments.
-        //TODO add System.exit() support with proper return value
+    public void run(final String... args) throws IOException {
+        final Optional<CommandLineOptionParser> optionalParsedArgs = CommandLineOptionParser.parse(args);
+
+        System.exit(SpringApplication.exit(applicationContext,
+                () -> optionalParsedArgs
+                        .map(this::doRun)
+                        .orElse(ApplicationStatus.INVALID_COMMANDLINE_ARGUMENTS.getValue())));
+
+    }
+
+    private int doRun(final CommandLineOptionParser parser) {
         LOGGER.trace("Executing EgaCryptorCommandLinerRunner::run(String[])");
-        final List<Path> paths = fileDiscoveryService.discoverFilesRecursively(Paths.get("/Users/ashutosh/gpg/test"));
-        taskExecutorService.execute(paths, Paths.get(""));
+        try {
+            final List<FileToProcess> fileToProcessList = fileDiscoveryService.discoverFilesRecursively(parser.getFileToEncryptPaths(),
+                    parser.getOutputFolderPath());
+            taskExecutorService.execute(fileToProcessList);
+            return ApplicationStatus.SUCCESS.getValue();
+        } catch (Exception e) {
+            LOGGER.error("Error while running an application - ", e);
+            return ApplicationStatus.APPLICATION_FAILED.getValue();
+        }
+    }
+
+    private enum ApplicationStatus {
+        SUCCESS(0),
+        APPLICATION_FAILED(1),
+        INVALID_COMMANDLINE_ARGUMENTS(2);
+
+        private final int value;
+
+        ApplicationStatus(final int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
     }
 }

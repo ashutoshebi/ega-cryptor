@@ -31,8 +31,6 @@ import uk.ac.ebi.ega.egacryptor.exception.CryptographyException;
 import uk.ac.ebi.ega.egacryptor.exception.pgp.PGPCryptographyException;
 import uk.ac.ebi.ega.egacryptor.stream.pgp.PGPEncryptedOutputStream;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,11 +44,8 @@ public class PGPCryptography implements Cryptography {
     private final PGPPublicKey pgpPublicKey;
     private final int bufferSize;
 
-    public PGPCryptography(final File publicKeyringFile, final int bufferSize) throws IOException, PGPException {
-
-        try (final InputStream inputStream = new FileInputStream(publicKeyringFile)) {
-            this.pgpPublicKey = PGPUtils.readPublicKey(inputStream);
-        }
+    public PGPCryptography(final InputStream publicKeyringInputStream, final int bufferSize) throws IOException, PGPException {
+        this.pgpPublicKey = PGPUtils.readPublicKey(publicKeyringInputStream);
         this.bufferSize = bufferSize;
         installProviderIfNeeded();
     }

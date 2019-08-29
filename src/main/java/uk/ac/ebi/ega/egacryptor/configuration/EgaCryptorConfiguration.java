@@ -17,9 +17,14 @@
  */
 package uk.ac.ebi.ega.egacryptor.configuration;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import uk.ac.ebi.ega.egacryptor.cryptography.Cryptography;
+import uk.ac.ebi.ega.egacryptor.cryptography.pgp.PGPCryptography;
 import uk.ac.ebi.ega.egacryptor.pipeline.CryptographyPipeline;
 import uk.ac.ebi.ega.egacryptor.pipeline.DefaultCryptographyPipeline;
 import uk.ac.ebi.ega.egacryptor.service.FileDiscoveryService;
@@ -27,9 +32,7 @@ import uk.ac.ebi.ega.egacryptor.service.IFileDiscoveryService;
 import uk.ac.ebi.ega.egacryptor.service.ITaskExecutorService;
 import uk.ac.ebi.ega.egacryptor.service.TaskExecutorService;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
+import java.io.IOException;
 
 @Configuration
 public class EgaCryptorConfiguration {
@@ -38,18 +41,11 @@ public class EgaCryptorConfiguration {
     private int bufferSize;
 
     @Bean
-    public CryptographyPipeline initDefaultCryptographyPipeline(@Value("${pgp.public.key}") String publicKeyPath) throws URISyntaxException {
-
-        final File publicKeyFile = Paths.get(ClassLoader.getSystemResource(publicKeyPath).toURI()).toFile();
-
-        if (!publicKeyFile.exists()) {
-            throw new RuntimeException("Public key file " + publicKeyPath + " not found");
-        }
-
+    public CryptographyPipeline initDefaultCryptographyPipeline(final Cryptography cryptography) {
         if (bufferSize > 0 && ((bufferSize & (bufferSize - 1)) != 0)) {
-            throw new RuntimeException("Buffer size for pgp encryption should be power of 2");
+            throw new RuntimeException("Buffer size for encryption should be power of 2");
         }
-        return new DefaultCryptographyPipeline(publicKeyFile, bufferSize);
+        return new DefaultCryptographyPipeline(cryptography, bufferSize);
     }
 
     @Bean
@@ -60,5 +56,15 @@ public class EgaCryptorConfiguration {
     @Bean
     public IFileDiscoveryService initFileDiscoveryService() {
         return new FileDiscoveryService();
+    }
+
+    @Bean
+    public Cryptography initPGPCryptography(@Value("${pgp.public.key}") String publicKeyPath) throws IOException, PGPException {
+        final Resource resource = new ClassPathResource(publicKeyPath);
+
+        if (!resource.exists()) {
+            throw new RuntimeException("Public key file ".concat(publicKeyPath).concat(" not found"));
+        }
+        return new PGPCryptography(resource.getInputStream(), bufferSize);
     }
 }

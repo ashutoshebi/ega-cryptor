@@ -20,10 +20,6 @@ package uk.ac.ebi.ega.egacryptor.exception.pgp;
 import uk.ac.ebi.ega.egacryptor.exception.CryptographyException;
 
 public class PGPCryptographyException extends CryptographyException {
-    public PGPCryptographyException(String message) {
-        super(message);
-    }
-
     public PGPCryptographyException(String message, Throwable throwable) {
         super(message, throwable);
     }

@@ -15,10 +15,23 @@
  * limitations under the License.
  *
  */
-package uk.ac.ebi.ega.egacryptor.pipeline;
+package uk.ac.ebi.ega.egacryptor.cryptography.util;
 
-import uk.ac.ebi.ega.egacryptor.model.FileToProcess;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-public interface CryptographyPipeline {
-    void process(final FileToProcess fileToProcess);
+public class FileUtils {
+    public static Path newEmptyPath() {
+        return Paths.get("");
+    }
+
+    public static void writeToFile(final File file, final String content) throws IOException {
+        try (final OutputStream outputStream = new FileOutputStream(file)) {
+            outputStream.write(content.getBytes());
+        }
+    }
 }

@@ -17,9 +17,10 @@
  */
 package uk.ac.ebi.ega.egacryptor.service;
 
-import java.nio.file.Path;
+import uk.ac.ebi.ega.egacryptor.model.FileToProcess;
+
 import java.util.List;
 
 public interface ITaskExecutorService {
-    void execute(final List<Path> paths, final Path encryptedOutputFilePath);
+    void execute(final List<FileToProcess> fileToProcessList);
 }

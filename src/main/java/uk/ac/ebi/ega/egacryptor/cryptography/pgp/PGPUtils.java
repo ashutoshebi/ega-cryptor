@@ -28,7 +28,7 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.PGPUtil;
-import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyKeyEncryptionMethodGenerator;
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public class PGPUtils {
         LOGGER.trace("Searching for public key in keyring");
 
         final PGPPublicKeyRingCollection pgpPublicKeyRings = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(inputStream),
-                new BcKeyFingerprintCalculator());
+                new JcaKeyFingerprintCalculator());
 
         // just loop through the collection till we find a key suitable for encryption
         PGPPublicKey publicKey = null;
@@ -80,7 +80,7 @@ public class PGPUtils {
         }
 
         if (!isForEncryption(publicKey)) {
-            throw new IllegalArgumentException("KeyID " + publicKey.getKeyID() + " not flagged for encryption.");
+            throw new IllegalArgumentException("KeyID ".concat(publicKey.getKeyID() + " not flagged for encryption."));
         }
         LOGGER.trace("Public key found for encryption with KeyID {}", publicKey.getKeyID());
         return publicKey;

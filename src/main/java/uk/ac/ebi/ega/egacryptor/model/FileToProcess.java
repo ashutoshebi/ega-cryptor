@@ -15,14 +15,28 @@
  * limitations under the License.
  *
  */
-package uk.ac.ebi.ega.egacryptor.service;
+package uk.ac.ebi.ega.egacryptor.model;
 
-import uk.ac.ebi.ega.egacryptor.model.FileToProcess;
-
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 
-public interface IFileDiscoveryService {
-    List<FileToProcess> discoverFilesRecursively(final List<Path> filePaths, final Path outputFilePath) throws IOException;
+public class FileToProcess {
+    private final Path fileToEncryptPath;
+    private final Path outputFilePath;
+
+    public FileToProcess(final Path fileToEncryptPath, final Path outputFilePath) {
+        this.fileToEncryptPath = fileToEncryptPath;
+        this.outputFilePath = outputFilePath;
+    }
+
+    public FileToProcess(final Path fileToEncryptPath) {
+        this(fileToEncryptPath, fileToEncryptPath.getParent());
+    }
+
+    public Path getFileToEncryptPath() {
+        return fileToEncryptPath;
+    }
+
+    public Path getOutputFilePath() {
+        return outputFilePath;
+    }
 }

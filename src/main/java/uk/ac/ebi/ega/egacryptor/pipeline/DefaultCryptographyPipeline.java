@@ -17,11 +17,12 @@
  */
 package uk.ac.ebi.ega.egacryptor.pipeline;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.ac.ebi.ega.egacryptor.cryptography.pgp.PGPCryptography;
+import uk.ac.ebi.ega.egacryptor.cryptography.Cryptography;
+import uk.ac.ebi.ega.egacryptor.cryptography.util.FileUtils;
 import uk.ac.ebi.ega.egacryptor.exception.CryptographyException;
+import uk.ac.ebi.ega.egacryptor.model.FileToProcess;
 import uk.ac.ebi.ega.egacryptor.stream.EncryptInputStream;
 import uk.ac.ebi.ega.egacryptor.stream.EncryptedOutputStream;
 import uk.ac.ebi.ega.egacryptor.stream.pipeline.DefaultStream;
@@ -33,47 +34,73 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static uk.ac.ebi.ega.egacryptor.constant.FileExtensionType.GPG;
+import static uk.ac.ebi.ega.egacryptor.constant.FileExtensionType.MD5;
+import static uk.ac.ebi.ega.egacryptor.cryptography.util.FileUtils.writeToFile;
+
 public class DefaultCryptographyPipeline implements CryptographyPipeline {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCryptographyPipeline.class);
 
-    private final File publicKeyFile;
     private final int bufferSize;
+    private final Cryptography cryptography;
 
-    public DefaultCryptographyPipeline(final File publicKeyFile, final int bufferSize) {
-        this.publicKeyFile = publicKeyFile;
+    public DefaultCryptographyPipeline(final Cryptography cryptography, final int bufferSize) {
+        this.cryptography = cryptography;
         this.bufferSize = bufferSize;
     }
 
     @Override
-    public void process(final Path filePathToEncrypt, final Path encryptedOutputFilePath) {
+    public void process(final FileToProcess fileToProcess) {
         LOGGER.trace("Executing DefaultCryptographyPipeline::process(Path, Path)");
-        LOGGER.info("filePathToEncrypt={}, encryptedOutputFilePath={}", filePathToEncrypt, encryptedOutputFilePath);
+        LOGGER.debug("filePathToEncrypt={}", fileToProcess);
         try {
-            doProcess(filePathToEncrypt, encryptedOutputFilePath);
-        } catch (CryptographyException | IOException | PGPException e) {
+            doProcess(fileToProcess);
+        } catch (CryptographyException | IOException e) {
             LOGGER.error("Error in DefaultCryptographyPipeline::process(Path, Path) - {}", e.getMessage());
             throw new RuntimeException("Error while processing request", e);
         }
     }
 
-    private void doProcess(final Path filePathToEncrypt, final Path encryptedOutputFilePath) throws CryptographyException, IOException, PGPException {
-        final File inputFile = filePathToEncrypt.toFile();
-        final File outputFile = new File(filePathToEncrypt.toString().concat(".gpg"));//TODO add logic to generate output files in encryptedOutputFilePath folder
-        final EncryptInputStream encryptInputStream = getEncryptInputStream(inputFile);
-        final EncryptedOutputStream encryptedOutputStream = getEncryptedOutputStream(outputFile);
+    private void doProcess(final FileToProcess fileToProcess) throws CryptographyException, IOException {
+        final File inputFile = fileToProcess.getFileToEncryptPath().toFile();
+        final Path outputFilePath = fileToProcess.getOutputFilePath();
+        final File outputFile = outputFilePath.toFile();
 
-        try (final PipelineStream pipelineStream = new DefaultStream(encryptInputStream, encryptedOutputStream, bufferSize)) {
-            final long bytesRead = pipelineStream.execute();
-            LOGGER.info("Total bytes read={}", bytesRead);
+        if (!outputFile.exists() && !outputFile.mkdir()) {
+            throw new FileNotFoundException("Path ".concat(outputFile.getPath()).concat(" doesn't exists. Unable to create path."));
         }
-        //TODO write plain & encrpted MD5 in a file. Generate 2 files.
+
+        final File outputFileMD5 = FileUtils.newEmptyPath().resolve(outputFilePath).resolve(inputFile.getName().
+                concat(MD5.getFileExtension())).toFile();
+        final File outputFileGPG = FileUtils.newEmptyPath().resolve(outputFilePath).resolve(inputFile.getName().
+                concat(GPG.getFileExtension())).toFile();
+        final File outputFileGPGMD5 = FileUtils.newEmptyPath().resolve(outputFilePath).resolve(inputFile.getName().
+                concat(GPG.getFileExtension().concat(MD5.getFileExtension()))).toFile();
+
+        if (outputFileMD5.exists() || outputFileGPG.exists() || outputFileGPGMD5.exists()) {
+            LOGGER.info("Process skip for file {}. All or some of these files are already exists - {},{},{}", inputFile.getPath(),
+                    outputFileMD5.getPath(), outputFileGPG.getPath(), outputFileGPGMD5.getPath());
+            return;
+        }
+
+        final EncryptInputStream encryptInputStream = getEncryptInputStream(inputFile);
+        final EncryptedOutputStream encryptedOutputStream = getEncryptedOutputStream(outputFileGPG);
+
+        long bytesRead;
+        try (final PipelineStream pipelineStream = new DefaultStream(encryptInputStream, encryptedOutputStream, bufferSize)) {
+            bytesRead = pipelineStream.execute();
+        }
+        writeToFile(outputFileMD5, encryptInputStream.getMD5());
+        writeToFile(outputFileGPGMD5, encryptedOutputStream.getMD5());
+        LOGGER.info("File {} is successfully encrypted. Total bytes read {}. These files have been generated {},{},{}", inputFile.getPath(), bytesRead,
+                outputFileMD5.getPath(), outputFileGPG.getPath(), outputFileGPGMD5.getPath());
     }
 
     private EncryptInputStream getEncryptInputStream(final File fileToEncrypt) throws FileNotFoundException {
         return new EncryptInputStream(new FileInputStream(fileToEncrypt));
     }
 
-    private EncryptedOutputStream getEncryptedOutputStream(final File encryptedOutputFile) throws CryptographyException, IOException, PGPException {
-        return new EncryptedOutputStream(encryptedOutputFile, new PGPCryptography(publicKeyFile, bufferSize));
+    private EncryptedOutputStream getEncryptedOutputStream(final File encryptedOutputFile) throws CryptographyException, IOException {
+        return new EncryptedOutputStream(encryptedOutputFile, cryptography);
     }
 }

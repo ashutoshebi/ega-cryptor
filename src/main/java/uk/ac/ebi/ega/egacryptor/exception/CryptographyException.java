@@ -18,10 +18,6 @@
 package uk.ac.ebi.ega.egacryptor.exception;
 
 public class CryptographyException extends Exception {
-    public CryptographyException(final String message) {
-        super(message);
-    }
-
     public CryptographyException(final String message, final Throwable throwable) {
         super(message, throwable);
     }
