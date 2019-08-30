@@ -21,18 +21,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.ega.egacryptor.cryptography.Cryptography;
 import uk.ac.ebi.ega.egacryptor.cryptography.util.FileUtils;
+import uk.ac.ebi.ega.egacryptor.cryptography.util.Hash;
 import uk.ac.ebi.ega.egacryptor.exception.CryptographyException;
 import uk.ac.ebi.ega.egacryptor.model.FileToProcess;
-import uk.ac.ebi.ega.egacryptor.stream.EncryptInputStream;
-import uk.ac.ebi.ega.egacryptor.stream.EncryptedOutputStream;
 import uk.ac.ebi.ega.egacryptor.stream.pipeline.DefaultStream;
 import uk.ac.ebi.ega.egacryptor.stream.pipeline.PipelineStream;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
+import java.security.DigestInputStream;
+import java.security.DigestOutputStream;
+import java.security.MessageDigest;
 
 import static uk.ac.ebi.ega.egacryptor.constant.FileExtensionType.GPG;
 import static uk.ac.ebi.ega.egacryptor.constant.FileExtensionType.MD5;
@@ -51,7 +55,7 @@ public class DefaultCryptographyPipeline implements CryptographyPipeline {
 
     @Override
     public void process(final FileToProcess fileToProcess) {
-        LOGGER.trace("Executing DefaultCryptographyPipeline::process(Path, Path)");
+        LOGGER.trace("process() has been called");
         LOGGER.debug("filePathToEncrypt={}", fileToProcess);
         try {
             doProcess(fileToProcess);
@@ -83,25 +87,22 @@ public class DefaultCryptographyPipeline implements CryptographyPipeline {
             return;
         }
 
-        final EncryptInputStream encryptInputStream = getEncryptInputStream(inputFile);
-        final EncryptedOutputStream encryptedOutputStream = getEncryptedOutputStream(outputFileGPG);
+        final MessageDigest inputStreamMessageDigest = Hash.getMD5();
+        final MessageDigest outputStreamMessageDigest = Hash.getMD5();
 
+        final DigestInputStream digestInputStream = new DigestInputStream(new FileInputStream(inputFile), inputStreamMessageDigest);//Will be closed in PipelineStream
         long bytesRead;
-        try (final PipelineStream pipelineStream = new DefaultStream(encryptInputStream, encryptedOutputStream, bufferSize)) {
-            LOGGER.info("File {} is being processed", inputFile.getPath());
-            bytesRead = pipelineStream.execute();
+
+        try (final DigestOutputStream digestOutputStream = new DigestOutputStream(new FileOutputStream(outputFileGPG), outputStreamMessageDigest)) {
+            final OutputStream pgpEncryptedOutputStream = cryptography.encrypt(digestOutputStream);//Will be closed in PipelineStream
+            try (final PipelineStream pipelineStream = new DefaultStream(digestInputStream, pgpEncryptedOutputStream, bufferSize)) {
+                LOGGER.info("File {} is being processed", inputFile.getPath());
+                bytesRead = pipelineStream.execute();
+            }
         }
-        writeToFile(outputFileMD5, encryptInputStream.getMD5());
-        writeToFile(outputFileGPGMD5, encryptedOutputStream.getMD5());
+        writeToFile(outputFileMD5, Hash.normalize(inputStreamMessageDigest));
+        writeToFile(outputFileGPGMD5, Hash.normalize(outputStreamMessageDigest));
         LOGGER.info("File {} is successfully encrypted. Total bytes read {}. These files have been generated {},{},{}", inputFile.getPath(), bytesRead,
                 outputFileMD5.getPath(), outputFileGPG.getPath(), outputFileGPGMD5.getPath());
-    }
-
-    private EncryptInputStream getEncryptInputStream(final File fileToEncrypt) throws FileNotFoundException {
-        return new EncryptInputStream(new FileInputStream(fileToEncrypt));
-    }
-
-    private EncryptedOutputStream getEncryptedOutputStream(final File encryptedOutputFile) throws CryptographyException, IOException {
-        return new EncryptedOutputStream(encryptedOutputFile, cryptography);
     }
 }
