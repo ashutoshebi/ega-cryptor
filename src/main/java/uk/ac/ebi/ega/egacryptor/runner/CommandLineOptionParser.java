@@ -23,6 +23,7 @@ import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -45,7 +46,10 @@ public class CommandLineOptionParser {
     private CommandLineOptionParser(final OptionSet optionSet) throws FileNotFoundException {
         outputFolderPath = Paths.get(optionSet.valueOf(OUTPUT_FOLDER_PATH).toString());
 
-        if (!outputFolderPath.toString().isEmpty() && !outputFolderPath.normalize().toFile().mkdirs()) {
+        File outputFolder;
+
+        if (!outputFolderPath.toString().isEmpty() && !(outputFolder = outputFolderPath.normalize().toFile()).exists()
+                && !outputFolder.mkdirs()) {
             throw new FileNotFoundException("Output directory path doesn't exists. Unable to create directory.");
         }
         fileToEncryptPaths = Arrays.asList(optionSet.valueOf(FILE_TO_ENCRYPT_PATH).toString().split(",")).

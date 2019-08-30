@@ -33,6 +33,7 @@ import uk.ac.ebi.ega.egacryptor.service.ITaskExecutorService;
 import uk.ac.ebi.ega.egacryptor.service.TaskExecutorService;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 @Configuration
 public class EgaCryptorConfiguration {
@@ -65,6 +66,9 @@ public class EgaCryptorConfiguration {
         if (!resource.exists()) {
             throw new RuntimeException("Public key file ".concat(publicKeyPath).concat(" not found"));
         }
-        return new PGPCryptography(resource.getInputStream(), bufferSize);
+
+        try (final InputStream inputStream = resource.getInputStream()) {
+            return new PGPCryptography(inputStream, bufferSize);
+        }
     }
 }
