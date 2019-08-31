@@ -55,12 +55,12 @@ public class DefaultCryptographyPipeline implements CryptographyPipeline {
 
     @Override
     public void process(final FileToProcess fileToProcess) {
-        LOGGER.trace("process() has been called");
+        LOGGER.trace("Cryptography process is running");
         LOGGER.debug("filePathToEncrypt={}", fileToProcess);
         try {
             doProcess(fileToProcess);
         } catch (CryptographyException | IOException e) {
-            LOGGER.error("Error in DefaultCryptographyPipeline::process(Path, Path) - {}", e.getMessage());
+            LOGGER.error("Error while executing cryptography pipeline - {}", e.getMessage());
             throw new RuntimeException("Error while processing request", e);
         }
     }

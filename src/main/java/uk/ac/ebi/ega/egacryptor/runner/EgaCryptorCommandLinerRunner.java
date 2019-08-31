@@ -59,7 +59,7 @@ public class EgaCryptorCommandLinerRunner implements CommandLineRunner {
     }
 
     private int doRun(final CommandLineOptionParser parser) {
-        LOGGER.trace("Executing EgaCryptorCommandLinerRunner::run(String[])");
+        LOGGER.trace("Executing CommandLiner");
         try {
             final List<FileToProcess> fileToProcessList = fileDiscoveryService.discoverFilesRecursively(parser.getFileToEncryptPaths(),
                     parser.getOutputFolderPath());

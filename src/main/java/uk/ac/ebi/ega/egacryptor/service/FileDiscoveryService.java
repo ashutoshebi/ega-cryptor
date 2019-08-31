@@ -44,7 +44,7 @@ public class FileDiscoveryService implements IFileDiscoveryService {
     @SuppressWarnings("unchecked")
     @Override
     public List<FileToProcess> discoverFilesRecursively(final List<Path> rootFilePaths, final Path outputFilePath) {
-        LOGGER.trace("Executing FileDiscoveryService::discoverFilesRecursively(Path)");
+        LOGGER.trace("Executing file discovery service");
 
         final List<FileToProcess> retrievedFilePaths = new ArrayList<>();
         rootFilePaths.parallelStream().map(rootFilePath -> {

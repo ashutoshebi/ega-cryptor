@@ -39,4 +39,11 @@ public class FileToProcess {
     public Path getOutputFilePath() {
         return outputFilePath;
     }
+
+    @Override
+    public String toString() {
+        return "FileToProcess{".concat(
+                "fileToEncryptPath=").concat(fileToEncryptPath.toString()).concat(
+                ", outputFilePath=").concat(outputFilePath.toString()).concat("}");
+    }
 }

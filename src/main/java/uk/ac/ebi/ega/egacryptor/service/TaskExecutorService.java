@@ -34,7 +34,7 @@ public class TaskExecutorService implements ITaskExecutorService {
 
     @Override
     public void execute(final List<FileToProcess> fileToProcessList) {
-        LOGGER.trace("Executing TaskExecutorService::execute(List<Path>, Path)");
+        LOGGER.trace("Task executor is running");
         LOGGER.debug("Path list size={}", fileToProcessList.size());
         fileToProcessList.parallelStream().forEach(cryptographyPipeline::process);
     }

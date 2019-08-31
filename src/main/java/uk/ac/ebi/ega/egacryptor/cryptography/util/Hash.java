@@ -36,7 +36,7 @@ public class Hash {
         try {
             return MessageDigest.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
-            LOGGER.error("Error in Hash::getHashingAlgorithm(String) - {}", e.getMessage());
+            LOGGER.error("Error in getting hash algorithm - {}", e.getMessage());
             throw new AssertionError(e);
         }
     }

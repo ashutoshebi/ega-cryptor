@@ -55,7 +55,7 @@ public class PGPCryptography implements Cryptography {
         try {
             return doEncrypt(fileOutputStream);
         } catch (IOException | PGPException e) {
-            LOGGER.error("Error in PGPCryptography::encrypt(File, String) - {}", e.getMessage());
+            LOGGER.error("Error in encryption - {}", e.getMessage());
             throw new PGPCryptographyException(e.getMessage(), e);
         }
     }
