@@ -54,7 +54,7 @@ public class DefaultCryptographyPipelineTest {
     }
 
     @Test
-    public void process_WhenGivenValidFilePathToProcess_EncryptFiles() throws IOException {
+    public void process_WhenGivenValidFilePathToProcess_ThenEncryptFiles() throws IOException {
         final File outputFolder = temporaryFolder.newFolder("path", "to", "process", "files");
         final File createdFile = new File(outputFolder, "fileToProcess.txt");
 
@@ -74,14 +74,14 @@ public class DefaultCryptographyPipelineTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void process_WhenGivenInValidInputPath_ThrowsException() throws IOException {
+    public void process_WhenGivenInValidInputPath_ThenThrowsException() throws IOException {
         final File outputFolder = temporaryFolder.newFolder("path", "to", "process", "files");
         final FileToProcess fileToProcess = new FileToProcess(newEmptyPath(), outputFolder.toPath().toAbsolutePath());
         cryptographyPipeline.process(fileToProcess);
     }
 
     @Test(expected = RuntimeException.class)
-    public void process_WhenGivenInValidOutputPath_ThrowsException() {
+    public void process_WhenGivenInValidOutputPath_ThenThrowsException() {
         final FileToProcess fileToProcess = new FileToProcess(newEmptyPath().toAbsolutePath(), newEmptyPath());
         cryptographyPipeline.process(fileToProcess);
     }
