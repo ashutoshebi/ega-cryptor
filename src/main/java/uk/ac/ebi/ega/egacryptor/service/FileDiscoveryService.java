@@ -47,7 +47,7 @@ public class FileDiscoveryService implements IFileDiscoveryService {
         LOGGER.trace("Executing file discovery service");
 
         final List<FileToProcess> retrievedFilePaths = new ArrayList<>();
-        rootFilePaths.parallelStream().map(rootFilePath -> {
+        rootFilePaths.stream().map(rootFilePath -> {
             try {
                 return discoverFiles(rootFilePath, outputFilePath);
             } catch (IOException e) {
