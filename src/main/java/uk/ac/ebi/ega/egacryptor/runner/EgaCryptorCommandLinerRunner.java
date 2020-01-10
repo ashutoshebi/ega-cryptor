@@ -63,7 +63,11 @@ public class EgaCryptorCommandLinerRunner implements CommandLineRunner {
         try {
             final List<FileToProcess> fileToProcessList = fileDiscoveryService.discoverFilesRecursively(parser.getFileToEncryptPaths(),
                     parser.getOutputFolderPath());
-            taskExecutorService.execute(fileToProcessList);
+            if (parser.getNoOfThreads() == 1) {
+                taskExecutorService.execute(fileToProcessList);
+            } else {
+                taskExecutorService.execute(fileToProcessList, parser.getNoOfThreads());
+            }
             return ApplicationStatus.SUCCESS.getValue();
         } catch (Exception e) {
             LOGGER.error("Error while running an application - ", e);
