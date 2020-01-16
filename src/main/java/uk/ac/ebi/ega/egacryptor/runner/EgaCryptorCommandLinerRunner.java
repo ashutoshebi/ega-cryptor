@@ -17,9 +17,13 @@
  */
 package uk.ac.ebi.ega.egacryptor.runner;
 
+import joptsimple.OptionException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import uk.ac.ebi.ega.egacryptor.cryptography.pgp.PGPCryptography;
@@ -28,8 +32,12 @@ import uk.ac.ebi.ega.egacryptor.service.IFileDiscoveryService;
 import uk.ac.ebi.ega.egacryptor.service.ITaskExecutorService;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+
+import static uk.ac.ebi.ega.egacryptor.runner.CommandLineOptionParser.OPTIONS_HELP;
 
 public class EgaCryptorCommandLinerRunner implements CommandLineRunner {
 
@@ -38,28 +46,41 @@ public class EgaCryptorCommandLinerRunner implements CommandLineRunner {
     private final ITaskExecutorService taskExecutorService;
     private final IFileDiscoveryService fileDiscoveryService;
     private final ApplicationContext applicationContext;
+    private final Path defaultOutputFilePath;
 
     public EgaCryptorCommandLinerRunner(final ITaskExecutorService taskExecutorService,
                                         final IFileDiscoveryService fileDiscoveryService,
-                                        final ApplicationContext applicationContext) {
+                                        final ApplicationContext applicationContext,
+                                        final String defaultOutputFilePath) {
         this.taskExecutorService = taskExecutorService;
         this.fileDiscoveryService = fileDiscoveryService;
         this.applicationContext = applicationContext;
+        this.defaultOutputFilePath = Paths.get(defaultOutputFilePath);
     }
 
     @Override
     public void run(final String... args) throws IOException {
-        final Optional<CommandLineOptionParser> optionalParsedArgs = CommandLineOptionParser.parse(args);
+        final OptionParser optionParser = CommandLineOptionParser.getOptionParser();
+        try {
+            final OptionSet optionSet = optionParser.parse(args);
 
-        System.exit(SpringApplication.exit(applicationContext,
-                () -> optionalParsedArgs
-                        .map(this::doRun)
-                        .orElse(ApplicationStatus.INVALID_COMMANDLINE_ARGUMENTS.getValue())));
+            if (optionSet.has(OPTIONS_HELP)) {
+                optionParser.printHelpOn(System.out);
+                terminateApplication(ApplicationStatus.SUCCESS::getValue);
+            }
 
+            final CommandLineOptionProcessor commandLineOptionProcessor = CommandLineOptionProcessor
+                    .processOptions(optionSet, defaultOutputFilePath);
+            terminateApplication(() -> doRun(commandLineOptionProcessor));
+        } catch (OptionException e) {
+            LOGGER.error("Passed invalid command line arguments");
+            optionParser.printHelpOn(System.out);
+            terminateApplication(ApplicationStatus.INVALID_COMMANDLINE_ARGUMENTS::getValue);
+        }
     }
 
-    private int doRun(final CommandLineOptionParser parser) {
-        LOGGER.trace("Executing CommandLiner");
+    private int doRun(final CommandLineOptionProcessor parser) {
+        LOGGER.info("Process started at {} ---------------", new Date());
         try {
             final List<FileToProcess> fileToProcessList = fileDiscoveryService.discoverFilesRecursively(parser.getFileToEncryptPaths(),
                     parser.getOutputFolderPath());
@@ -68,11 +89,16 @@ public class EgaCryptorCommandLinerRunner implements CommandLineRunner {
             } else {
                 taskExecutorService.execute(fileToProcessList, parser.getNoOfThreads());
             }
+            LOGGER.info("Process completed at {} ---------------", new Date());
             return ApplicationStatus.SUCCESS.getValue();
         } catch (Exception e) {
             LOGGER.error("Error while running an application - ", e);
             return ApplicationStatus.APPLICATION_FAILED.getValue();
         }
+    }
+
+    private void terminateApplication(final ExitCodeGenerator exitCodeGenerator) {
+        System.exit(SpringApplication.exit(applicationContext, exitCodeGenerator));
     }
 
     private enum ApplicationStatus {
