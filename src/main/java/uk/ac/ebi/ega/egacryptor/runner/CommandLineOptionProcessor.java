@@ -73,7 +73,11 @@ public class CommandLineOptionProcessor {
         final int availableProcessors = Runtime.getRuntime().availableProcessors();
         LOGGER.info("Application has detected {} no. of cores/processors. Threads will be created based on option provided", availableProcessors);
 
-        if (optionSet.has(UTILIZE_HALF_RESOURCE)) {
+        if (availableProcessors == 1) {
+            LOGGER.info("Single processor has been detected. File(s) will be processed sequentially. " +
+                    "Any provided option will be ignored");
+            return 1;
+        } else if (optionSet.has(UTILIZE_HALF_RESOURCE)) {
             LOGGER.info("Half resource option has been selected");
             return availableProcessors / 2;
         } else if (optionSet.has(UTILIZE_OPTIMIZE_RESOURCE)) {
