@@ -23,4 +23,6 @@ import java.util.List;
 
 public interface ITaskExecutorService {
     void execute(final List<FileToProcess> fileToProcessList);
+
+    void execute(final List<FileToProcess> fileToProcessList, int noOfThreads);
 }

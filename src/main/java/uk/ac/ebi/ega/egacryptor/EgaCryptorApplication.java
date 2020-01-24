@@ -1,5 +1,6 @@
 package uk.ac.ebi.ega.egacryptor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
@@ -18,7 +19,8 @@ public class EgaCryptorApplication {
     @Bean
     public EgaCryptorCommandLinerRunner initEgaCryptorCommandLinerRunner(final ITaskExecutorService taskExecutorService,
                                                                          final IFileDiscoveryService fileDiscoveryService,
-                                                                         final ApplicationContext applicationContext) {
-        return new EgaCryptorCommandLinerRunner(taskExecutorService, fileDiscoveryService, applicationContext);
+                                                                         final ApplicationContext applicationContext,
+                                                                         @Value("output.files.path.default") final String defaultOutputFilePath) {
+        return new EgaCryptorCommandLinerRunner(taskExecutorService, fileDiscoveryService, applicationContext, defaultOutputFilePath);
     }
 }

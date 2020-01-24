@@ -70,7 +70,7 @@ public class DefaultCryptographyPipeline implements CryptographyPipeline {
         final Path outputFilePath = fileToProcess.getOutputFilePath();
         final File outputFile = outputFilePath.toFile();
 
-        if (!outputFile.exists() && !outputFile.mkdir()) {
+        if (!outputFile.exists() && !outputFile.mkdirs()) {
             throw new FileNotFoundException("Path ".concat(outputFile.getPath()).concat(" doesn't exists. Unable to create path."));
         }
 
