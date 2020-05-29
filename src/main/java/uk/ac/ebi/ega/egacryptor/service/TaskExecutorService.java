@@ -30,7 +30,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class TaskExecutorService implements ITaskExecutorService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileDiscoveryService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskExecutorService.class);
     private final CryptographyPipeline cryptographyPipeline;
 
     public TaskExecutorService(final CryptographyPipeline cryptographyPipeline) {
