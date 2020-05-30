@@ -43,7 +43,7 @@ import java.util.List;
 
 public class PGPUtils {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PGPCryptography.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PGPUtils.class);
 
     private static final int KEY_FLAGS = 27;
     private static final List<Integer> MASTER_KEY_CERTIFICATION_TYPES = Arrays.asList(PGPSignature.POSITIVE_CERTIFICATION,

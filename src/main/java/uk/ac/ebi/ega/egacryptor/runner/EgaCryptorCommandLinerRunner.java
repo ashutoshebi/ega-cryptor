@@ -41,7 +41,7 @@ import static uk.ac.ebi.ega.egacryptor.runner.CommandLineOptionParser.OPTIONS_HE
 
 public class EgaCryptorCommandLinerRunner implements CommandLineRunner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PGPCryptography.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EgaCryptorCommandLinerRunner.class);
 
     private final ITaskExecutorService taskExecutorService;
     private final IFileDiscoveryService fileDiscoveryService;
